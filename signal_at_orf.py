@@ -227,7 +227,7 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
         file_name = os.path.basename(os.path.normpath(wiggle_data)) + '_metaORF.tsv'
         print(Fore.YELLOW + 'Saving output to file:')
         print(file_name)
-        merged_strands.to_csv(file_name, sep='\t')
+        merged_strands.to_csv(file_name, sep='\t', index=False)
         print()
         print(Fore.CYAN + 'Completed in ', end=" ")
         helpers.print_elapsed_time(t0)
