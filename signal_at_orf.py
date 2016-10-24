@@ -31,12 +31,13 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
 
     Keyword arguments
     =================
-    :param wiggle_data: dictionary of pandas data frames (output of function read_wiggle;
-    no default)
-    :param gff_file: string indicating path to the gff file providing the ORF coordinates
-    (no default)
-    :param save_file: boolean indicating whether output should be written to a TSV
-    file (in current working directory; defaults to True)
+    :param wiggle_data: dictionary of pandas DataFrames
+            Input wiggle data (output of function read_wiggle; no default)
+    :param gff_file: string
+            Path to the gff file providing the ORF coordinates (no default)
+    :param save_file: bool, optional
+            Whether output should be written to a TSV file (in current working
+            directory; defaults to True)
     :return: Either a pandas DataFrame or a TSV file of a table with four columns:
             - chr: chromosome number
             - position: nucleotide coordinate (in normalized total length of 1 kb)
