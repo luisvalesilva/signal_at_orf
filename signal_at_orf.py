@@ -91,7 +91,7 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
 
         gene_count = 0
 
-        # Loop through rows (use itertuples because it's faster than iterrows)
+        # Loop through rows (use itertuples, it's faster than iterrows)
         for row in chrgff.itertuples():
             # Skip if gene coordinates not in ChIPseq data
             if (row.start not in chromData.loc[:, 'position'] or
@@ -185,7 +185,7 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
             new_positions = np.int_(np.linspace(1, 1000, num=1000, endpoint=True))
             new_signals = f(new_positions)
 
-            # Reverse the order of the position values
+            # Reverse the order of the position values (to join with Watson strand)
             new_positions = (1000 - new_positions) + 1
 
             # Make data frame for this gene
