@@ -40,5 +40,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Plot output of signal_at_orf.py")
     parser.add_argument('-a', '--input_data_a', help=("path to a TSV file"), required=True)
     parser.add_argument('-b', '--input_data_b', help=("path to a TSV file"))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    
+    # Also print help if no arguments are provided
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
     args = parser.parse_args()
     main()
