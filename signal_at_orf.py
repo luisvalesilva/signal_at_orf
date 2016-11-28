@@ -13,7 +13,7 @@ from colorama import Fore, Back, Style, init as colinit
 colinit(autoreset=True)
 
 
-def signal_at_orf(wiggle_data, gff_file, save_file=True):
+def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     """
     Given wiggle data generated using the lab's ChIP-seq analysis pipelines (as a
     dictionary of pandas data frames; output of function read_wiggle), this function
@@ -31,10 +31,13 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
 
     Keyword arguments
     =================
-    :param wiggle_data: dictionary of pandas DataFrames
+    :param wiggle: dictionary of pandas DataFrames
             Input wiggle data (output of function read_wiggle; no default)
-    :param gff_file: string
-            Path to the gff file providing the ORF coordinates (no default)
+    :param wiggle_folder: string
+            Path to folder containing the wiggle data (used to name file, when saving
+            output to file; no default)
+    :param gff: pandas DataFrame
+            Gff file providing the ORF coordinates (no default)
     :param save_file: bool, optional
             Whether output should be written to a TSV file (in current working
             directory; defaults to True)
@@ -47,10 +50,6 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
 
     t0 = time.time()
 
-    # GFF
-    gff = helpers.read_gff(gff_file)
-    # Wiggle data
-    wiggle = helpers.read_wiggle(wiggle_data, use_pbar=False)
     # Check reference genome
     gff_gen = helpers.check_genome(gff.ix[0, 'seqname'])
     wiggle_gen = helpers.check_genome(next(iter(wiggle.keys())))
@@ -225,7 +224,7 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
     print('------')
 
     if save_file:
-        file_name = os.path.basename(os.path.normpath(wiggle_data)) + '_metaORF.tsv'
+        file_name = os.path.basename(os.path.normpath(wiggle_folder)) + '_metaORF.tsv'
         print(Fore.YELLOW + 'Saving output to file:')
         print(file_name)
         merged_strands.to_csv(file_name, sep='\t', index=False)
@@ -245,7 +244,16 @@ def main():
     print(Style.BRIGHT + "          MEAN ChIP-SEQ SIGNAL AT META ORF")
     print(Style.BRIGHT + "----------------------------------------------------")
     print()
-    signal_at_orf(wiggle_data=args.wiggle_data, gff_file=args.gff_file, save_file=True)
+
+    # Wiggle data
+    wiggle_data = helpers.read_wiggle(path=args.wiggle_folder, use_pbar=False)
+
+    # GFF
+    gff_file = helpers.read_gff(path=args.gff_file)
+
+    signal_at_orf(wiggle=wiggle_data, wiggle_folder=args.wiggle_folder,
+                  gff=gff_file, save_file=True)
+
     print(Style.BRIGHT + "----------------------------------------------------")
     print()
 
@@ -253,15 +261,15 @@ def main():
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Calculate mean ChIP-seq signal at ORF")
-    parser.add_argument('-w', '--wiggle_data', help=('path to a folder containing wiggle data'
+    parser.add_argument('-w', '--wiggle_folder', help=('path to a folder containing wiggle data'
                                                      ' to get ChIP-seq signal from'), required=True)
     parser.add_argument('-g', '--gff_file', help='path to gff file', required=True)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    
+
     # Also print help if no arguments are provided
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    
+
     args = parser.parse_args()
     main()
