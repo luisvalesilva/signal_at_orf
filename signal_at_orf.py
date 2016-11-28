@@ -256,5 +256,10 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--wiggle_data', help=("path to a folder containing wiggle data"
                                                      " to get ChIP-seq signal from"), required=True)
     parser.add_argument('-g', '--gff_file', help='path to gff file', required=True)
+    # Also print help if no arguments are provided
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
+    
     args = parser.parse_args()
     main()
