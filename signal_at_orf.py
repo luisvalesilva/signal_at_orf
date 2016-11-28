@@ -159,7 +159,7 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
         for row in chrgff.itertuples():
             # Skip if gene coordinates not in ChIPseq data
             if (row.start not in chromData.loc[:, 'position'] or
-                        row.end not in chromData.loc[:, 'position']):
+                    row.end not in chromData.loc[:, 'position']):
                 continue
 
             # Collect flanking regions scaled according to ratio gene length / 1 kb
@@ -190,9 +190,9 @@ def signal_at_orf(wiggle_data, gff_file, save_file=True):
 
             # Make data frame for this gene
             gene_data = pd.DataFrame({'chr': chrNum,
-                                     'position': new_positions,
-                                     'signal': new_signals,
-                                     'gene': gene})
+                                      'position': new_positions,
+                                      'signal': new_signals,
+                                      'gene': gene})
 
             # To collect all genes
             minus_strand = minus_strand.append(gene_data)
