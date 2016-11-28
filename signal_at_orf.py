@@ -253,11 +253,13 @@ def main():
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Calculate mean ChIP-seq signal at ORF")
-    parser.add_argument('-w', '--wiggle_data', help=("path to a folder containing wiggle data"
-                                                     " to get ChIP-seq signal from"), required=True)
+    parser.add_argument('-w', '--wiggle_data', help=('path to a folder containing wiggle data'
+                                                     ' to get ChIP-seq signal from'), required=True)
     parser.add_argument('-g', '--gff_file', help='path to gff file', required=True)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    
     # Also print help if no arguments are provided
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
     
