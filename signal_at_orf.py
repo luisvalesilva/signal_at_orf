@@ -106,7 +106,6 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
             # Skip if gene coordinates not in ChIPseq data
             if (row.start not in chromData.loc[:, 'position'] or
                         row.end not in chromData.loc[:, 'position']):
-                print('Yes, here!')
                 continue
 
             # Collect flanking regions scaled according to ratio gene length / 1 kb
@@ -121,6 +120,7 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
 
             # Skip if there are discontinuities in the data (missing position:value pairs)
             if gene_data.shape[0] != full_leng:
+                print('Yes, here!')
                 continue
 
             # Normalize to segment length of 1000
