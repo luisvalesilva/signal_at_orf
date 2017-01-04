@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 
-""" Python 3 implementation of signal_at_orf function of hwglabr package."""
+"""
+    signal_at_orf
+    ~~~~~~~~~~~~~
+    Python 3 implementation of signal_at_orf function of hwglabr package.
+
+    :copyright: (c) 2016 by Luis Vale Silva.
+    :license: MIT, see LICENSE for more details.
+"""
+
+__author__ = "Luis Vale Silva"
+__status__ = "Development"
+
 
 import helpers
 import sys

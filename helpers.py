@@ -1,4 +1,15 @@
-"""Helper functions for signal_at_orf"""
+
+"""
+    signal_at_orf helpers
+    ~~~~~~~~~~~~~~~~~~~~~
+    Helper functions for signal_at_orf.
+
+    :copyright: (c) 2016 by Luis Vale Silva.
+    :license: MIT, see LICENSE for more details.
+"""
+
+__author__ = "Luis Vale Silva"
+__status__ = "Development"
 
 import sys
 import os
