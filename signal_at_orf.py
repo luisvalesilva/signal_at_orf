@@ -120,7 +120,8 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
 
             # Skip if there are discontinuities in the data (missing position:value pairs)
             if gene_data.shape[0] != full_leng:
-                print('Yes, here!')
+                print(ene_data.shape[0])
+                print(full_leng)
                 continue
 
             # Normalize to segment length of 1000
