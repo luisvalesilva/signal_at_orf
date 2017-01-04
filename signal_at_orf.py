@@ -64,7 +64,7 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     # Check reference genome
     gff_gen = helpers.check_genome(gff.ix[0, 'seqname'])
     wiggle_gen = helpers.check_genome(next(iter(wiggle.keys())))
-
+    
     if gff_gen == wiggle_gen:
         print('Identified reference genome: ', end="")
         print(Fore.RED + gff_gen)
