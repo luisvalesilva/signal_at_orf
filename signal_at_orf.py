@@ -5,27 +5,6 @@
     ~~~~~~~~~~~~~
     Python 3 implementation of signal_at_orf function of hwglabr package.
 
-    :copyright: (c) 2016 by Luis Vale Silva.
-    :license: MIT, see LICENSE for more details.
-"""
-
-__author__ = "Luis Vale Silva"
-__status__ = "Development"
-
-
-import helpers
-import sys
-import os
-import time
-import pandas as pd
-import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
-from colorama import Fore, Back, Style, init as colinit
-colinit(autoreset=True)
-
-
-def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
-    """
     Given wiggle data generated using the lab's ChIP-seq analysis pipelines (as a
     dictionary of pandas data frames; output of function read_wiggle), this function
     pulls out the ChIP signal over all ORFs in the yeast genome. It collects the
@@ -40,8 +19,31 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     After scaling, fits a spline function passing through all signal points and uses
     it to output values of the signal at each integer position between 1 and 1000.
 
+    :copyright: (c) 2016 by Luis Vale Silva.
+    :license: MIT, see LICENSE for more details.
+"""
+
+__author__ = "Luis Vale Silva"
+__status__ = "Development"
+
+
+import utils
+import sys
+import os
+import time
+import pandas as pd
+import numpy as np
+from scipy.interpolate import InterpolatedUnivariateSpline
+from colorama import Fore, Back, Style, init as colinit
+colinit(autoreset=True)
+
+
+def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
+    """
+
+
     Keyword arguments
-    =================
+    -----------------
     :param wiggle: dictionary of pandas DataFrames
             Input wiggle data (output of function read_wiggle; no default)
     :param wiggle_folder: string
@@ -58,7 +60,6 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
             - signal: ChIP-seq signal at each position (1 to 1000)
             - gene: Systematic gene name
     """
-
     t0 = time.time()
 
     # Check reference genome
