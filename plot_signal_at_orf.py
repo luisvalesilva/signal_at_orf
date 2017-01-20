@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Plot the output of signal_at_orf.py, after grouping by position and calculating the mean"""
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--input_data_a', help=("path to a TSV file"), required=True)
     parser.add_argument('-b', '--input_data_b', help=("path to a TSV file"))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    
+
     # Also print help if no arguments are provided
     if len(sys.argv) == 1:
         parser.print_help()
