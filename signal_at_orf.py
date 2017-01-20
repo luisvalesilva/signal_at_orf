@@ -41,7 +41,6 @@ colinit(autoreset=True)
 def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     """
 
-
     Keyword arguments
     -----------------
     :param wiggle: dictionary of pandas DataFrames
@@ -252,9 +251,9 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
 
 def main():
     print()
-    print(Style.BRIGHT + "----------------------------------------------------")
-    print(Style.BRIGHT + "          MEAN ChIP-SEQ SIGNAL AT META ORF")
-    print(Style.BRIGHT + "----------------------------------------------------")
+    print(Style.BRIGHT + " ---------------------------------------------------")
+    print(Style.BRIGHT + "|         MEAN ChIP-SEQ SIGNAL AT META ORF          |")
+    print(Style.BRIGHT + " ---------------------------------------------------")
     print()
 
     # Wiggle data
