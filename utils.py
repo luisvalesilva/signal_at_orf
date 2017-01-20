@@ -1,10 +1,9 @@
-
 """
     signal_at_orf utils
     ~~~~~~~~~~~~~~~~~~~~~
     Helper functions for signal_at_orf.
 
-    :copyright: (c) 2016 by Luis Vale Silva.
+    :copyright: (c) 2017 by Luis Vale Silva.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -134,3 +133,84 @@ def check_genome(input_str):
         return 'SK1'
     else:
         print("Error: cannot determine reference genome.")
+
+
+def collect_signal(wiggle, strand):
+    """Determine reference genome (S288c or SK1), by comparing input to elements
+    in the list of chromosome names/numbers in the reference genome annotations.
+
+    Parameters
+    ----------
+    wiggle: dict of pandas DataFrames
+        Input wiggle data (output of function read_wiggle)
+    wiggle: string
+        DNA strand indicated using GFF "strand" column symbol (one of '+' and '-')
+    Returns
+    -------
+    Pandas DataFrame with four columns:
+        - chr: chromosome number
+        - position: base pair coordinate (in normalized total length of 1 kb)
+        - signal: ChIP-seq signal at each position (1 to 1000)
+        - gene: Systematic gene name"""
+        # Get all genes on "+" strand of current chromosome
+        chrgff = gff.loc[(gff['seqname'] == chrNum) & (gff['strand'] == '+')]
+
+        gene_count = 0
+
+        # Loop through rows (use itertuples, it's faster than iterrows)
+        for row in chrgff.itertuples():
+            # Skip if gene coordinates not in ChIPseq data
+            if (row.start not in chromData.loc[:, 'position'] or
+                        row.end not in chromData.loc[:, 'position']):
+                continue
+
+            # Collect flanking regions scaled according to ratio gene length / 1 kb
+            gene_leng = row.end - row.start
+            start = row.start - (gene_leng // 2)
+            end = row.end + (gene_leng // 2)
+            full_leng = (end - start) + 1
+            gene = row.attribute
+
+            # Pull out signal
+            gene_data = chromData.loc[(chromData['position'] >= start) & (chromData['position'] <= end)]
+
+            # Skip if there are discontinuities in the data (missing position:value pairs)
+            if gene_data.shape[0] != full_leng:
+                continue
+
+            # Normalize to segment length of 1000
+            pd.options.mode.chained_assignment = None  # Disable warning about chained assignment
+            gene_data['position'] = gene_data['position'] - start + 1
+            gene_data['position'] = gene_data['position'] * (1000 / full_leng)
+
+            # Genes of different sizes have different numbers of positions; small genes
+            # (<1000bp) cannot produce signal values for all 1000 positions and will have gaps
+            # This means that longer genes with more signal values per each position in the
+            # sequence of 1000 positions will contribute more to the final output.
+            # In order to avoid this, first build an interpolation model of the signal and then
+            # use it to project the signal onto the first 1000 integers
+            f = InterpolatedUnivariateSpline(gene_data['position'], gene_data['signal'])
+            new_positions = np.int_(np.linspace(1, 1000, num=1000, endpoint=True))
+            new_signals = f(new_positions)
+
+            # Make data frame for this gene
+            gene_data = pd.DataFrame({'chr': chrNum,
+                                      'position': new_positions,
+                                      'signal': new_signals,
+                                      'gene': gene})
+
+            # To collect all genes
+            plus_strand = plus_strand.append(gene_data)
+
+            gene_count += 1
+
+
+        print('... + strand: {0} genes (skipped {1})'.format(gene_count,
+                                                             chrgff.shape[0] - gene_count))
+
+        # Keep track of total and non-skipped genes, to print info at the end
+        number_genes += chrgff.shape[0]
+        number_skipped_genes += chrgff.shape[0] - gene_count
+
+        # To collect all chrs
+        plus_final = plus_final.append(plus_strand)

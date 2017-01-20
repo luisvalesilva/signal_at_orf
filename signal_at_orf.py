@@ -19,7 +19,15 @@
     After scaling, fits a spline function passing through all signal points and uses
     it to output values of the signal at each integer position between 1 and 1000.
 
-    :copyright: (c) 2016 by Luis Vale Silva.
+    signal_at_orf returns either a table (as pandas DataFrame or a TSV file) with
+    four columns:
+        - chr: chromosome number
+        - position: base pair coordinate (in normalized total length of 1 kb)
+        - signal: ChIP-seq signal at each position (1 to 1000)
+        - gene: Systematic gene name
+
+
+    :copyright: (c) 2017 by Luis Vale Silva.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -48,22 +56,33 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     :param wiggle_folder: string
             Path to folder containing the wiggle data (used to name file, when saving
             output to file; no default)
-    :param gff: pandas DataFrame
-            Gff file providing the ORF coordinates (no default)
     :param save_file: bool, optional
             Whether output should be written to a TSV file (in current working
             directory; defaults to True)
-    :return: Either a pandas DataFrame or a TSV file of a table with four columns:
-            - chr: chromosome number
-            - position: nucleotide coordinate (in normalized total length of 1 kb)
-            - signal: ChIP-seq signal at each position (1 to 1000)
-            - gene: Systematic gene name
     """
+
+
+
+
+
+def main():
+    print()
+    print(Style.BRIGHT + " ---------------------------------------------------")
+    print(Style.BRIGHT + "|         MEAN ChIP-SEQ SIGNAL AT META ORF          |")
+    print(Style.BRIGHT + " ---------------------------------------------------")
+    print()
+
     t0 = time.time()
 
-    # Check reference genome
-    gff_gen = helpers.check_genome(gff.ix[0, 'seqname'])
-    wiggle_gen = helpers.check_genome(next(iter(wiggle.keys())))
+    # Wiggle data
+    wiggle_data = utils.read_wiggle(path=args.wiggle_folder, use_pbar=False)
+
+    # GFF
+    gff_file = utils.read_gff(path=args.gff_file)
+
+    # Check ref genome
+    gff_gen = utils.check_genome(gff.ix[0, 'seqname'])
+    wiggle_gen = utils.check_genome(next(iter(wiggle.keys())))
 
     if gff_gen == wiggle_gen:
         print('Identified reference genome: ', end="")
@@ -73,7 +92,7 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
 
     # Some feedback on the provided gff
     features = ', '.join(gff.ix[:, 'feature'].unique())
-    print(Fore.YELLOW + 'The following types of features are present in the gff data you provided:')
+    print(Fore.YELLOW + 'Types of features in provided gff:')
     print(Fore.YELLOW + '(they will all be included in the analysis)')
     print(Fore.RED + features)
 
@@ -85,7 +104,7 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     plus_final = pd.DataFrame()
     minus_final = pd.DataFrame()
 
-    # Keep track of total and non-skipped genes
+    # Keep track of total and skipped genes
     number_genes = 0
     number_skipped_genes = 0
 
@@ -241,26 +260,18 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
         merged_strands.to_csv(file_name, sep='\t', index=False)
         print()
         print(Fore.CYAN + 'Completed in ', end=" ")
-        helpers.print_elapsed_time(t0)
+        utils.print_elapsed_time(t0)
     else:
         print()
         print(Fore.CYAN + 'Completed in ', end=" ")
-        helpers.print_elapsed_time(t0)
+        utils.print_elapsed_time(t0)
         return merged_strands
 
 
-def main():
-    print()
-    print(Style.BRIGHT + " ---------------------------------------------------")
-    print(Style.BRIGHT + "|         MEAN ChIP-SEQ SIGNAL AT META ORF          |")
-    print(Style.BRIGHT + " ---------------------------------------------------")
-    print()
 
-    # Wiggle data
-    wiggle_data = helpers.read_wiggle(path=args.wiggle_folder, use_pbar=False)
 
-    # GFF
-    gff_file = helpers.read_gff(path=args.gff_file)
+
+
 
     signal_at_orf(wiggle=wiggle_data, wiggle_folder=args.wiggle_folder,
                   gff=gff_file, save_file=True)
