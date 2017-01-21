@@ -41,7 +41,6 @@ import os
 import time
 import pandas as pd
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
 from colorama import Fore, Back, Style, init as colinit
 colinit(autoreset=True)
 
@@ -62,9 +61,6 @@ def signal_at_orf(wiggle, wiggle_folder, gff, save_file=True):
     """
 
 
-
-
-
 def main():
     print()
     print(Style.BRIGHT + " ---------------------------------------------------")
@@ -74,18 +70,23 @@ def main():
 
     t0 = time.time()
 
+    # CLI arguments
+    wiggle_folder = args.wiggle_folder
+    gff = args.gff_file
+    save_file = True
+
     # Wiggle data
-    wiggle_data = utils.read_wiggle(path=args.wiggle_folder, use_pbar=False)
+    wiggle = utils.read_wiggle(path=wiggle_folder, use_pbar=False)
 
     # GFF
-    gff_file = utils.read_gff(path=args.gff_file)
+    gff = utils.read_gff(path=gff)
 
     # Check ref genome
     gff_gen = utils.check_genome(gff.ix[0, 'seqname'])
     wiggle_gen = utils.check_genome(next(iter(wiggle.keys())))
 
     if gff_gen == wiggle_gen:
-        print('Identified reference genome: ', end="")
+        print('Identified reference genome:', end=' ')
         print(Fore.RED + gff_gen)
     else:
         sys.exit('Error: reference genomes in gff file and wiggle data don\'t match.')
@@ -120,19 +121,15 @@ def main():
 
         gene_count = 0
 
-        # Loop through rows (use itertuples, it's faster than iterrows)
+        # Loop through rows (itertuples is faster than iterrows)
         for row in chrgff.itertuples():
             # Skip if gene coordinates not in ChIPseq data
             if (row.start not in chromData.loc[:, 'position'] or
-                        row.end not in chromData.loc[:, 'position']):
+                row.end not in chromData.loc[:, 'position']):
                 continue
 
             # Collect flanking regions scaled according to ratio gene length / 1 kb
-            gene_leng = row.end - row.start
-            start = row.start - (gene_leng // 2)
-            end = row.end + (gene_leng // 2)
-            full_leng = (end - start) + 1
-            gene = row.attribute
+            start, end, full_leng, gene = utils.coordinates(row=row)
 
             # Pull out signal
             gene_data = chromData.loc[(chromData['position'] >= start) & (chromData['position'] <= end)]
@@ -142,28 +139,22 @@ def main():
                 continue
 
             # Normalize to segment length of 1000
-            pd.options.mode.chained_assignment = None  # Disable warning about chained assignment
-            gene_data['position'] = gene_data['position'] - start + 1
-            gene_data['position'] = gene_data['position'] * (1000 / full_leng)
+            gene_data = utils.norm_length(gene_data=gene_data, full_leng=full_leng,
+                                          start=start, length=1000)
 
-            # Genes of different sizes have different numbers of positions; small genes
-            # (<1000bp) cannot produce signal values for all 1000 positions and will have gaps
-            # This means that longer genes with more signal values per each position in the
-            # sequence of 1000 positions will contribute more to the final output.
-            # In order to avoid this, first build an interpolation model of the signal and then
-            # use it to project the signal onto the first 1000 integers
-            f = InterpolatedUnivariateSpline(gene_data['position'], gene_data['signal'])
-            new_positions = np.int_(np.linspace(1, 1000, num=1000, endpoint=True))
-            new_signals = f(new_positions)
+            # Update positions (1 to 1000) and signals (spline interpolation)
+            new_positions, new_signals = utils.spline_interpolation(gene_data=gene_data)
 
             # Make data frame for this gene
-            gene_data = pd.DataFrame({'chr': chrNum, 'position': new_positions, 'signal': new_signals, 'gene': gene})
+            gene_data = pd.DataFrame({'chr': chrNum,
+                                      'position': new_positions,
+                                      'signal': new_signals,
+                                      'gene': gene})
 
-            # To collect all genes
+            # Collect all genes
             plus_strand = plus_strand.append(gene_data)
 
             gene_count += 1
-
 
         print('... + strand: {0} genes (skipped {1})'.format(gene_count,
                                                              chrgff.shape[0] - gene_count))
@@ -192,11 +183,7 @@ def main():
                 continue
 
             # Collect flanking regions scaled according to ratio gene length / 1 kb
-            gene_leng = row.end - row.start
-            start = row.start - (gene_leng // 2)
-            end = row.end + (gene_leng // 2)
-            full_leng = (end - start) + 1
-            gene = row.attribute
+            start, end, full_leng, gene = utils.coordinates(row=row)
 
             # Pull out signal
             gene_data = chromData.loc[(chromData['position'] >= start) & (chromData['position'] <= end)]
@@ -206,13 +193,11 @@ def main():
                 continue
 
             # Normalize to segment length of 1000
-            pd.options.mode.chained_assignment = None  # Disable warning about chained assignment
-            gene_data['position'] = gene_data['position'] - start + 1
-            gene_data['position'] = gene_data['position'] * (1000 / full_leng)
+            gene_data = utils.norm_length(gene_data=gene_data, full_leng=full_leng,
+                                          start=start, length=1000)
 
-            f = InterpolatedUnivariateSpline(gene_data['position'], gene_data['signal'])
-            new_positions = np.int_(np.linspace(1, 1000, num=1000, endpoint=True))
-            new_signals = f(new_positions)
+            # Update positions (1 to 1000) and signals (spline interpolation)
+            new_positions, new_signals = utils.spline_interpolation(gene_data=gene_data)
 
             # Reverse the order of the position values (to join with Watson strand)
             new_positions = (1000 - new_positions) + 1
@@ -259,22 +244,14 @@ def main():
         print(file_name)
         merged_strands.to_csv(file_name, sep='\t', index=False)
         print()
-        print(Fore.CYAN + 'Completed in ', end=" ")
+        print(Fore.CYAN + 'Completed in', end=' ')
         utils.print_elapsed_time(t0)
     else:
         print()
-        print(Fore.CYAN + 'Completed in ', end=" ")
+        print(Fore.CYAN + 'Completed in', end=' ')
         utils.print_elapsed_time(t0)
         return merged_strands
 
-
-
-
-
-
-
-    signal_at_orf(wiggle=wiggle_data, wiggle_folder=args.wiggle_folder,
-                  gff=gff_file, save_file=True)
 
     print(Style.BRIGHT + "----------------------------------------------------")
     print()
@@ -286,7 +263,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--wiggle_folder', help=('path to a folder containing wiggle data'
                                                      ' to get ChIP-seq signal from'), required=True)
     parser.add_argument('-g', '--gff_file', help='path to gff file', required=True)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2')
 
     # Also print help if no arguments are provided
     if len(sys.argv) == 1:
